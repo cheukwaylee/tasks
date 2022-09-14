@@ -10,7 +10,7 @@
 #define block_size 8
 
 //typedef double TYPE;
-typedef int data_type;
+typedef int data_type; // TODO ? int? uint?
 
 
 void bbgemm_top(data_type m1[N], data_type m2[N], data_type prod[N]) {

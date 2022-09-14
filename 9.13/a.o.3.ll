@@ -3,36 +3,27 @@ source_filename = "a.o.3.bc"
 target datalayout = "e-m:e-i64:64-i128:128-i256:256-i512:512-i1024:1024-i2048:2048-i4096:4096-n8:16:32:64-S128-v16:16-v24:32-v32:32-v48:64-v96:128-v192:256-v256:256-v512:512-v1024:1024"
 target triple = "fpga64-xilinx-none"
 
+; these 7 are empty function: NO functionality implemented, NO return value needed
 $_ssdm_op_SpecTopModule = comdat any
-
 $_ssdm_op_SpecPipeline = comdat any
-
 $_ssdm_op_SpecLoopTripCount = comdat any
-
 $_ssdm_op_SpecLoopName = comdat any
-
 $_ssdm_op_SpecInterface = comdat any
-
 $_ssdm_op_SpecBitsMap = comdat any
-
 $_ssdm_op_SpecBRAMWithByteEnable = comdat any
 
+; the following are PartSet x1; PartSelect x3; BitSelect x2; BitConcatenate x3; with implement
 $_ssdm_op_PartSet.i256.i256.i8.i32.i32 = comdat any
 
 $_ssdm_op_PartSelect.i9.i13.i32.i32 = comdat any
-
 $_ssdm_op_PartSelect.i8.i256.i32.i32 = comdat any
-
 $_ssdm_op_PartSelect.i32.i256.i32.i32 = comdat any
 
 $_ssdm_op_BitSelect.i1.i32.i32 = comdat any
-
 $_ssdm_op_BitSelect.i1.i13.i32 = comdat any
 
 $_ssdm_op_BitConcatenate.i8.i3.i5 = comdat any
-
 $_ssdm_op_BitConcatenate.i5.i3.i2 = comdat any
-
 $_ssdm_op_BitConcatenate.i256.i32.i32.i32.i32.i32.i32.i32.i32 = comdat any
 
 @p_str = internal unnamed_addr constant [1 x i8] zeroinitializer
@@ -41,84 +32,98 @@ $_ssdm_op_BitConcatenate.i256.i32.i32.i32.i32.i32.i32.i32.i32 = comdat any
 @empty_1 = internal unnamed_addr constant [11 x i8] c"bbgemm_top\00"
 @empty_2 = internal unnamed_addr constant [9 x i8] c"loop_add\00"
 
+; Intrinsic Functions ; https://releases.llvm.org/2.0/docs/LangRef.html
+; these 3 function: functionality implemented and return value needed
 ; Function Attrs: nounwind readnone
 declare i256 @llvm.part.set.i256.i8(i256, i8, i32, i32) #0
 
+; https://releases.llvm.org/2.0/docs/LangRef.html#int_part_select
+; The 'llvm.part.select' family of intrinsic functions selects a range of bits from an integer value 
+; and returns them in the same bit width as the original value.
 ; Function Attrs: nounwind readnone
 declare i256 @llvm.part.select.i256(i256, i32, i32) #0
-
 ; Function Attrs: nounwind readnone
 declare i13 @llvm.part.select.i13(i13, i32, i32) #0
 
+; the following 2 never used
 ; Function Attrs: nounwind readnone speculatable
-declare void @llvm.dbg.value(metadata, i64, metadata) #1
-
+declare void @llvm.dbg.value(metadata, i64, metadata) #1 ; skiped
 ; Function Attrs: nounwind readnone speculatable
-declare void @llvm.dbg.declare(metadata, metadata) #1
+declare void @llvm.dbg.declare(metadata, metadata) #1 ; skiped
 
+
+; MAIN implement
 ; Function Attrs: nounwind
 define internal void @bbgemm_top_Pipeline_loop_add([512 x i256]* %m1_loc, [512 x i256]* %m2_loc, [512 x i256]* %prod_loc) #2 {
 newFuncRoot:
-  %i = alloca i13, !bitwidth !79
-  call void (...) @_ssdm_op_SpecBRAMWithByteEnable([512 x i256]* %m1_loc) #2
-  call void (...) @_ssdm_op_SpecBRAMWithByteEnable([512 x i256]* %m2_loc) #2
-  store i13 0, i13* %i, !bitwidth !80, !dep_idx !81, !deps !82
+  %i = alloca i13, !bitwidth !79 ; int* i = new int;
+  call void (...) @_ssdm_op_SpecBRAMWithByteEnable([512 x i256]* %m1_loc) #2 ; empty function
+  call void (...) @_ssdm_op_SpecBRAMWithByteEnable([512 x i256]* %m2_loc) #2 ; empty function
+  store i13 0, i13* %i, !bitwidth !80, !dep_idx !81, !deps !82 ; *i = 0
   br label %memcpy-split1, !bitwidth !80
 
 load-store-loop.preheader.exitStub:               ; preds = %memcpy-split1
   ret void, !bitwidth !80
 
 memcpy-split1:                                    ; preds = %.split, %newFuncRoot
-  %i_1 = load i13, i13* %i, !bitwidth !87, !dep_idx !88, !deps !89
-  %tmp = call i1 @_ssdm_op_BitSelect.i1.i13.i32(i13 %i_1, i32 12), !bitwidth !94
-  %empty = call i32 (...) @_ssdm_op_SpecLoopTripCount(i64 512, i64 512, i64 512) #2
+  %i_1 = load i13, i13* %i, !bitwidth !87, !dep_idx !88, !deps !89 ; int i_1 = *i
+  %tmp = call i1 @_ssdm_op_BitSelect.i1.i13.i32(i13 %i_1, i32 12), !bitwidth !94 ; TRUE if i=4096, and so termination!!
+  %empty = call i32 (...) @_ssdm_op_SpecLoopTripCount(i64 512, i64 512, i64 512) #2 ; empty function
   br i1 %tmp, label %load-store-loop.preheader.exitStub, label %.split, !llvm.loop !95, !bitwidth !80
 
 .split:                                           ; preds = %memcpy-split1
-  call void (...) @_ssdm_op_SpecPipeline(i32 1, i32 0, i32 0, i32 0, [1 x i8]* @empty_0) #2
-  call void (...) @_ssdm_op_SpecLoopName([9 x i8]* @empty_2) #2
-  %lshr_ln = call i9 @_ssdm_op_PartSelect.i9.i13.i32.i32(i13 %i_1, i32 3, i32 11), !bitwidth !99
-  %zext_ln36 = zext i9 %lshr_ln to i64, !bitwidth !100
+  call void (...) @_ssdm_op_SpecPipeline(i32 1, i32 0, i32 0, i32 0, [1 x i8]* @empty_0) #2 ; empty function
+  call void (...) @_ssdm_op_SpecLoopName([9 x i8]* @empty_2) #2 ; empty function
+  %lshr_ln = call i9 @_ssdm_op_PartSelect.i9.i13.i32.i32(i13 %i_1, i32 3, i32 11), !bitwidth !99 ; i/2^3 and-bitwise (8-bit 1)
+  %zext_ln36 = zext i9 %lshr_ln to i64, !bitwidth !100 ; array offset: +1 per i+=8
+  
   %m1_loc_addr = getelementptr [512 x i256], [512 x i256]* %m1_loc, i64 0, i64 %zext_ln36, !bitwidth !7
   %m1_loc_load = load i256, i256* %m1_loc_addr, align 32, !bitwidth !101
   %trunc_ln36 = trunc i256 %m1_loc_load to i32, !bitwidth !102
   %m2_loc_addr = getelementptr [512 x i256], [512 x i256]* %m2_loc, i64 0, i64 %zext_ln36, !bitwidth !7
   %m2_loc_load = load i256, i256* %m2_loc_addr, align 32, !bitwidth !101
   %trunc_ln36_1 = trunc i256 %m2_loc_load to i32, !bitwidth !102
-  %add_ln36 = add nsw i32 %trunc_ln36_1, %trunc_ln36, !bitwidth !102
-  %prod_loc_addr = getelementptr [512 x i256], [512 x i256]* %prod_loc, i64 0, i64 %zext_ln36, !bitwidth !7
+  %add_ln36 = add nsw i32 %trunc_ln36_1, %trunc_ln36, !bitwidth !102 ; add 0 LSB
+
+  %prod_loc_addr = getelementptr [512 x i256], [512 x i256]* %prod_loc, i64 0, i64 %zext_ln36, !bitwidth !7 ; get result addr
+  
+  ; forward mode: (mx_loc_load>>%1) and-bitwise (%2-%1) : (mx_loc_load>>%1) and-bitwise (31-bit 1)
+  ; TODO ? why keep the MSB of each i32 element 0??? due to 2's complement??
   %tmp_4 = call i32 @_ssdm_op_PartSelect.i32.i256.i32.i32(i256 %m1_loc_load, i32 32, i32 63), !bitwidth !102
   %tmp_5 = call i32 @_ssdm_op_PartSelect.i32.i256.i32.i32(i256 %m2_loc_load, i32 32, i32 63), !bitwidth !102
-  %add_ln36_1 = add nsw i32 %tmp_5, %tmp_4, !bitwidth !102
+  %add_ln36_1 = add nsw i32 %tmp_5, %tmp_4, !bitwidth !102 ; add 1st
   %tmp_6 = call i32 @_ssdm_op_PartSelect.i32.i256.i32.i32(i256 %m1_loc_load, i32 64, i32 95), !bitwidth !102
   %tmp_7 = call i32 @_ssdm_op_PartSelect.i32.i256.i32.i32(i256 %m2_loc_load, i32 64, i32 95), !bitwidth !102
-  %add_ln36_2 = add nsw i32 %tmp_7, %tmp_6, !bitwidth !102
+  %add_ln36_2 = add nsw i32 %tmp_7, %tmp_6, !bitwidth !102 ; add 2nd
   %tmp_8 = call i32 @_ssdm_op_PartSelect.i32.i256.i32.i32(i256 %m1_loc_load, i32 96, i32 127), !bitwidth !102
   %tmp_9 = call i32 @_ssdm_op_PartSelect.i32.i256.i32.i32(i256 %m2_loc_load, i32 96, i32 127), !bitwidth !102
-  %add_ln36_3 = add nsw i32 %tmp_9, %tmp_8, !bitwidth !102
+  %add_ln36_3 = add nsw i32 %tmp_9, %tmp_8, !bitwidth !102 ; add 3rd
   %tmp_s = call i32 @_ssdm_op_PartSelect.i32.i256.i32.i32(i256 %m1_loc_load, i32 128, i32 159), !bitwidth !102
   %tmp_1 = call i32 @_ssdm_op_PartSelect.i32.i256.i32.i32(i256 %m2_loc_load, i32 128, i32 159), !bitwidth !102
-  %add_ln36_4 = add nsw i32 %tmp_1, %tmp_s, !bitwidth !102
+  %add_ln36_4 = add nsw i32 %tmp_1, %tmp_s, !bitwidth !102 ; add 4th
   %tmp_2 = call i32 @_ssdm_op_PartSelect.i32.i256.i32.i32(i256 %m1_loc_load, i32 160, i32 191), !bitwidth !102
   %tmp_3 = call i32 @_ssdm_op_PartSelect.i32.i256.i32.i32(i256 %m2_loc_load, i32 160, i32 191), !bitwidth !102
-  %add_ln36_5 = add nsw i32 %tmp_3, %tmp_2, !bitwidth !102
+  %add_ln36_5 = add nsw i32 %tmp_3, %tmp_2, !bitwidth !102 ; add 5th
   %tmp_10 = call i32 @_ssdm_op_PartSelect.i32.i256.i32.i32(i256 %m1_loc_load, i32 192, i32 223), !bitwidth !102
   %tmp_11 = call i32 @_ssdm_op_PartSelect.i32.i256.i32.i32(i256 %m2_loc_load, i32 192, i32 223), !bitwidth !102
-  %add_ln36_6 = add nsw i32 %tmp_11, %tmp_10, !bitwidth !102
+  %add_ln36_6 = add nsw i32 %tmp_11, %tmp_10, !bitwidth !102 ; add 6th
   %tmp_12 = call i32 @_ssdm_op_PartSelect.i32.i256.i32.i32(i256 %m1_loc_load, i32 224, i32 255), !bitwidth !102
   %tmp_13 = call i32 @_ssdm_op_PartSelect.i32.i256.i32.i32(i256 %m2_loc_load, i32 224, i32 255), !bitwidth !102
-  %add_ln36_7 = add nsw i32 %tmp_13, %tmp_12, !bitwidth !102
+  %add_ln36_7 = add nsw i32 %tmp_13, %tmp_12, !bitwidth !102 ; add 7 MSB
+
   %or_ln36_6 = call i256 @_ssdm_op_BitConcatenate.i256.i32.i32.i32.i32.i32.i32.i32.i32(i32 %add_ln36_7, i32 %add_ln36_6, i32 %add_ln36_5, i32 %add_ln36_4, i32 %add_ln36_3, i32 %add_ln36_2, i32 %add_ln36_1, i32 %add_ln36), !bitwidth !101
-  store i256 %or_ln36_6, i256* %prod_loc_addr, align 32, !bitwidth !80
-  %add_ln33 = add i13 %i_1, 8, !bitwidth !87
+  store i256 %or_ln36_6, i256* %prod_loc_addr, align 32, !bitwidth !80 ; save result
+  %add_ln33 = add i13 %i_1, 8, !bitwidth !87 ; i += 8
   store i13 %add_ln33, i13* %i, !bitwidth !80, !dep_idx !103, !deps !104
   br label %memcpy-split1, !llvm.loop !95, !bitwidth !80
 }
 
+; MEMCPY: prod_loc->prod
 ; Function Attrs: nounwind
 define internal void @bbgemm_top_Pipeline_4([512 x i256]* %prod_loc, [4096 x i32]* %prod) #2 {
 newFuncRoot:
   %loop_index = alloca i13, !bitwidth !79
+  ; empty function
   call void (...) @_ssdm_op_SpecInterface([4096 x i32]* %prod, [10 x i8]* @empty, i32 0, i32 0, [1 x i8]* @empty_0, i32 -1, i32 0, [1 x i8]* @empty_0, [1 x i8]* @empty_0, [1 x i8]* @empty_0, i32 0, i32 0, i32 0, i32 0, [1 x i8]* @empty_0, [1 x i8]* @empty_0) #2
   store i13 0, i13* %loop_index, !bitwidth !80, !dep_idx !108, !deps !109
   br label %load-store-loop, !bitwidth !80
@@ -128,18 +133,19 @@ memcpy-split.exitStub:                            ; preds = %load-store-loop
 
 load-store-loop:                                  ; preds = %load-store-loop.split, %newFuncRoot
   %loop_index_load = load i13, i13* %loop_index, !bitwidth !87, !dep_idx !112, !deps !113
-  call void (...) @_ssdm_op_SpecPipeline(i32 -1, i32 0, i32 1, i32 0, [1 x i8]* @p_str) #2
-  %exitcond18 = icmp eq i13 %loop_index_load, -4096, !bitwidth !94
+  call void (...) @_ssdm_op_SpecPipeline(i32 -1, i32 0, i32 1, i32 0, [1 x i8]* @p_str) #2 ; empty function
+  %exitcond18 = icmp eq i13 %loop_index_load, -4096, !bitwidth !94 ; TRUE: if loop_index_load overflow 0 ++ 4095 ++ -4096
   %empty = call i32 (...) @_ssdm_op_SpecLoopTripCount(i64 4096, i64 4096, i64 4096) #2
-  %empty_13 = add i13 %loop_index_load, 1, !bitwidth !87
+  %empty_13 = add i13 %loop_index_load, 1, !bitwidth !87 ; loop_index_load++
   br i1 %exitcond18, label %memcpy-split.exitStub, label %load-store-loop.split, !llvm.loop !116, !bitwidth !80
 
 load-store-loop.split:                            ; preds = %load-store-loop
   %loop_index_cast12 = zext i13 %loop_index_load to i64, !bitwidth !100
   %empty_14 = trunc i13 %loop_index_load to i3, !bitwidth !118
   %tmp_s = call i8 @_ssdm_op_BitConcatenate.i8.i3.i5(i3 %empty_14, i5 0), !bitwidth !119
-  %tmp_14 = call i9 @_ssdm_op_PartSelect.i9.i13.i32.i32(i13 %loop_index_load, i32 3, i32 11), !bitwidth !99
-  %p_cast13 = zext i9 %tmp_14 to i64, !bitwidth !100
+  %tmp_14 = call i9 @_ssdm_op_PartSelect.i9.i13.i32.i32(i13 %loop_index_load, i32 3, i32 11), !bitwidth !99 ; i/2^3 and-bitwise (8-bit 1)
+  %p_cast13 = zext i9 %tmp_14 to i64, !bitwidth !100 ; array offset: +1 per i+=8
+
   %prod_loc_addr = getelementptr [512 x i256], [512 x i256]* %prod_loc, i64 0, i64 %p_cast13, !bitwidth !7
   %prod_loc_load = load i256, i256* %prod_loc_addr, align 32, !bitwidth !101
   %empty_15 = or i8 %tmp_s, 31, !bitwidth !119
@@ -166,6 +172,7 @@ load-store-loop.split:                            ; preds = %load-store-loop
   br label %load-store-loop, !llvm.loop !116, !bitwidth !80
 }
 
+; MEMCPY: m2->m2_loc
 ; Function Attrs: nounwind
 define internal void @bbgemm_top_Pipeline_2([4096 x i32]* %m2, [512 x i256]* %m2_loc) #2 {
 newFuncRoot:
@@ -223,10 +230,12 @@ load-store-loop2.split:                           ; preds = %load-store-loop2
   br label %load-store-loop2, !llvm.loop !134, !bitwidth !80
 }
 
+; MEMCPY: m1->m1_loc
 ; Function Attrs: nounwind
 define internal void @bbgemm_top_Pipeline_1([4096 x i32]* %m1, [512 x i256]* %m1_loc) #2 {
 newFuncRoot:
   %loop_index6 = alloca i13, !bitwidth !79
+  ; empty function
   call void (...) @_ssdm_op_SpecInterface([4096 x i32]* %m1, [10 x i8]* @empty, i32 0, i32 0, [1 x i8]* @empty_0, i32 -1, i32 0, [1 x i8]* @empty_0, [1 x i8]* @empty_0, [1 x i8]* @empty_0, i32 0, i32 0, i32 0, i32 0, [1 x i8]* @empty_0, [1 x i8]* @empty_0) #2
   store i13 0, i13* %loop_index6, !bitwidth !80, !dep_idx !142, !deps !143
   br label %load-store-loop5, !bitwidth !80
@@ -236,31 +245,35 @@ load-store-loop2.preheader.exitStub:              ; preds = %load-store-loop5
 
 load-store-loop5:                                 ; preds = %load-store-loop5.split, %newFuncRoot
   %loop_index6_load = load i13, i13* %loop_index6, !bitwidth !87, !dep_idx !146, !deps !147
-  call void (...) @_ssdm_op_SpecPipeline(i32 -1, i32 0, i32 1, i32 0, [1 x i8]* @p_str) #2
-  %exitcond1621 = icmp eq i13 %loop_index6_load, -4096, !bitwidth !94
-  %empty = call i32 (...) @_ssdm_op_SpecLoopTripCount(i64 4096, i64 4096, i64 4096) #2
-  %empty_52 = add i13 %loop_index6_load, 1, !bitwidth !87
+  call void (...) @_ssdm_op_SpecPipeline(i32 -1, i32 0, i32 1, i32 0, [1 x i8]* @p_str) #2 ; empty function
+  %exitcond1621 = icmp eq i13 %loop_index6_load, -4096, !bitwidth !94 ; TRUE: if loop_index_load overflow 0 ++ 4095 ++ -4096
+  %empty = call i32 (...) @_ssdm_op_SpecLoopTripCount(i64 4096, i64 4096, i64 4096) #2 ; empty function
+  %empty_52 = add i13 %loop_index6_load, 1, !bitwidth !87 ; loop_index6_load++
   br i1 %exitcond1621, label %load-store-loop2.preheader.exitStub, label %load-store-loop5.split, !llvm.loop !150, !bitwidth !80
 
 load-store-loop5.split:                           ; preds = %load-store-loop5
-  %loop_index6_cast5 = zext i13 %loop_index6_load to i64, !bitwidth !100
+  %loop_index6_cast5 = zext i13 %loop_index6_load to i64, !bitwidth !100 ; array offset: +1 pre i++
   %m1_addr = getelementptr [4096 x i32], [4096 x i32]* %m1, i64 0, i64 %loop_index6_cast5, !bitwidth !49
   %m1_load = load i32, i32* %m1_addr, align 4, !bitwidth !102
-  %empty_53 = trunc i13 %loop_index6_load to i3, !bitwidth !118
-  %tmp_s = call i8 @_ssdm_op_BitConcatenate.i8.i3.i5(i3 %empty_53, i5 0), !bitwidth !119
-  %tmp_16 = call i9 @_ssdm_op_PartSelect.i9.i13.i32.i32(i13 %loop_index6_load, i32 3, i32 11), !bitwidth !99
-  %p_cast = zext i9 %tmp_16 to i64, !bitwidth !100
+
+  %empty_53 = trunc i13 %loop_index6_load to i3, !bitwidth !118 ; TODO ?
+  %tmp_s = call i8 @_ssdm_op_BitConcatenate.i8.i3.i5(i3 %empty_53, i5 0), !bitwidth !119 ; TODO ?
+  %tmp_16 = call i9 @_ssdm_op_PartSelect.i9.i13.i32.i32(i13 %loop_index6_load, i32 3, i32 11), !bitwidth !99 ; i/2^3 and-bitwise (8-bit 1)
+  %p_cast = zext i9 %tmp_16 to i64, !bitwidth !100 ; array offset: +1 per i+=8
   %m1_loc_addr = getelementptr [512 x i256], [512 x i256]* %m1_loc, i64 0, i64 %p_cast, !bitwidth !7
-  %empty_54 = or i8 %tmp_s, 31, !bitwidth !119
-  %empty_55 = icmp ugt i8 %tmp_s, %empty_54, !bitwidth !94
+  %empty_54 = or i8 %tmp_s, 31, !bitwidth !119 ; %tmp_s or-bitwise 0001 1111
+  %empty_55 = icmp ugt i8 %tmp_s, %empty_54, !bitwidth !94 ; unsigned greater than: TRUE if one of the highest 3 bits of %tmp_s are 1
+
   %empty_56 = zext i8 %tmp_s to i9, !bitwidth !120
   %empty_57 = zext i8 %empty_54 to i9, !bitwidth !120
   %empty_58 = zext i32 %m1_load to i256, !bitwidth !121
-  %empty_59 = xor i9 %empty_56, 255, !bitwidth !99
+  %empty_59 = xor i9 %empty_56, 255, !bitwidth !99 ; %empty_56 xor 1111 1111
+
   %empty_60 = select i1 %empty_55, i9 %empty_56, i9 %empty_57, !bitwidth !135
   %empty_61 = select i1 %empty_55, i9 %empty_57, i9 %empty_56, !bitwidth !135
   %empty_62 = select i1 %empty_55, i9 %empty_59, i9 %empty_56, !bitwidth !99
   %empty_63 = xor i9 %empty_60, 255, !bitwidth !99
+
   %empty_64 = zext i9 %empty_62 to i256, !bitwidth !121
   %empty_65 = zext i9 %empty_61 to i256, !bitwidth !121
   %empty_66 = zext i9 %empty_63 to i256, !bitwidth !121
@@ -275,14 +288,17 @@ load-store-loop5.split:                           ; preds = %load-store-loop5
   %tmp_2 = call i5 @_ssdm_op_BitConcatenate.i5.i3.i2(i3 %empty_53, i2 0), !bitwidth !136
   %udiv = zext i5 %tmp_2 to i32, !bitwidth !137
   %mask = shl i32 15, %udiv, !bitwidth !102
-  call void @_ssdm_op_Write.bram.i256(i256* %m1_loc_addr, i256 %empty_71, i32 %mask) #2, !bitwidth !80
+
+  call void @_ssdm_op_Write.bram.i256(i256* %m1_loc_addr, i256 %empty_71, i32 %mask) #2, !bitwidth !80 ; 
   store i13 %empty_52, i13* %loop_index6, !bitwidth !80, !dep_idx !151, !deps !152
   br label %load-store-loop5, !llvm.loop !150, !bitwidth !80
 }
 
+; TOP FUNCTION
 ; Function Attrs: nounwind
 define void @bbgemm_top([4096 x i32]* noalias %m1, [4096 x i32]* noalias %m2, [4096 x i32]* noalias %prod) #2 {
 codeRepl:
+  ; empty function
   call void (...) @_ssdm_op_SpecTopModule([11 x i8]* @empty_1) #2
   call void (...) @_ssdm_op_SpecInterface([4096 x i32]* %m1, [10 x i8]* @empty, i32 0, i32 0, [1 x i8]* @empty_0, i32 -1, i32 0, [1 x i8]* @empty_0, [1 x i8]* @empty_0, [1 x i8]* @empty_0, i32 0, i32 0, i32 0, i32 0, [1 x i8]* @empty_0, [1 x i8]* @empty_0) #2
   call void (...) @_ssdm_op_SpecBitsMap([4096 x i32]* %m1) #2, !map !155
@@ -290,15 +306,19 @@ codeRepl:
   call void (...) @_ssdm_op_SpecBitsMap([4096 x i32]* %m2) #2, !map !155
   call void (...) @_ssdm_op_SpecInterface([4096 x i32]* %prod, [10 x i8]* @empty, i32 0, i32 0, [1 x i8]* @empty_0, i32 -1, i32 0, [1 x i8]* @empty_0, [1 x i8]* @empty_0, [1 x i8]* @empty_0, i32 0, i32 0, i32 0, i32 0, [1 x i8]* @empty_0, [1 x i8]* @empty_0) #2
   call void (...) @_ssdm_op_SpecBitsMap([4096 x i32]* %prod) #2, !map !155
+
   %m1_loc = alloca [512 x i256], i64 1, align 512, !bitwidth !7
-  call void (...) @_ssdm_op_SpecBRAMWithByteEnable([512 x i256]* %m1_loc) #2
+  call void (...) @_ssdm_op_SpecBRAMWithByteEnable([512 x i256]* %m1_loc) #2 ; empty function
   %m2_loc = alloca [512 x i256], i64 1, align 512, !bitwidth !7
-  call void (...) @_ssdm_op_SpecBRAMWithByteEnable([512 x i256]* %m2_loc) #2
+  call void (...) @_ssdm_op_SpecBRAMWithByteEnable([512 x i256]* %m2_loc) #2 ; empty function
   %prod_loc = alloca [512 x i256], i64 1, align 512, !bitwidth !7
-  call void @bbgemm_top_Pipeline_1([4096 x i32]* %m1, [512 x i256]* %m1_loc), !bitwidth !80, !dep_idx !156, !deps !157
-  call void @bbgemm_top_Pipeline_2([4096 x i32]* %m2, [512 x i256]* %m2_loc), !bitwidth !80, !dep_idx !159, !deps !157
+
+  call void @bbgemm_top_Pipeline_1([4096 x i32]* %m1, [512 x i256]* %m1_loc), !bitwidth !80, !dep_idx !156, !deps !157 ; MEMCPY: m1->m1_loc
+  call void @bbgemm_top_Pipeline_2([4096 x i32]* %m2, [512 x i256]* %m2_loc), !bitwidth !80, !dep_idx !159, !deps !157 ; MEMCPY: m2->m2_loc
+  ; MAIN implement 
   call void @bbgemm_top_Pipeline_loop_add([512 x i256]* %m1_loc, [512 x i256]* %m2_loc, [512 x i256]* %prod_loc), !bitwidth !80, !dep_idx !160, !deps !161
-  call void @bbgemm_top_Pipeline_4([512 x i256]* %prod_loc, [4096 x i32]* %prod), !bitwidth !80, !dep_idx !165, !deps !166
+  call void @bbgemm_top_Pipeline_4([512 x i256]* %prod_loc, [4096 x i32]* %prod), !bitwidth !80, !dep_idx !165, !deps !166 ; MEMCPY: prod_loc->prod
+
   ret void, !bitwidth !80
 }
 
@@ -334,6 +354,7 @@ exit:                                             ; preds = %head
   ret void
 }
 
+; these 7 are empty function
 define weak void @_ssdm_op_SpecTopModule(...) comdat {
 entry:
   ret void
@@ -369,6 +390,7 @@ entry:
   ret void
 }
 
+; the following are PartSelect x3; BitSelect x2; BitConcatenate x3; with implement
 ; Function Attrs: nounwind readnone
 define weak i256 @_ssdm_op_PartSet.i256.i256.i8.i32.i32(i256, i8, i32, i32) #0 comdat {
 entry:
@@ -377,9 +399,9 @@ entry:
 }
 
 ; Function Attrs: nounwind readnone
-define weak i9 @_ssdm_op_PartSelect.i9.i13.i32.i32(i13, i32, i32) #0 comdat {
+define weak i9 @_ssdm_op_PartSelect.i9.i13.i32.i32(i13, i32, i32) #0 comdat { ;intput arg: (i, 3, 11)
 entry:
-  %empty = call i13 @llvm.part.select.i13(i13 %0, i32 %1, i32 %2)
+  %empty = call i13 @llvm.part.select.i13(i13 %0, i32 %1, i32 %2) ; forward mode: (i>>3) and-bitwise (8-bit 1): i/2^3 and-bitwise 1111 1111
   %empty_73 = trunc i13 %empty to i9
   ret i9 %empty_73
 }
@@ -395,30 +417,31 @@ entry:
 ; Function Attrs: nounwind readnone
 define weak i32 @_ssdm_op_PartSelect.i32.i256.i32.i32(i256, i32, i32) #0 comdat {
 entry:
-  %empty = call i256 @llvm.part.select.i256(i256 %0, i32 %1, i32 %2)
+  %empty = call i256 @llvm.part.select.i256(i256 %0, i32 %1, i32 %2) ; forward mode: (mx_loc_load>>%1) and-bitwise (%2-%1)
   %empty_75 = trunc i256 %empty to i32
   ret i32 %empty_75
 }
 
+; NOT used: only declaration
 ; Function Attrs: nounwind readnone
 declare i3 @_ssdm_op_PartSelect.i3.i13.i32.i32(i13, i32, i32) #0
 
 ; Function Attrs: nounwind readnone
 define weak i1 @_ssdm_op_BitSelect.i1.i32.i32(i32, i32) #0 comdat {
 entry:
-  %empty = shl i32 1, %1
-  %empty_76 = and i32 %0, %empty
-  %empty_77 = icmp ne i32 %empty_76, 0
+  %empty = shl i32 1, %1 ; 1<<%1
+  %empty_76 = and i32 %0, %empty ; %0 and-bitwise 1<<%1 
+  %empty_77 = icmp ne i32 %empty_76, 0 ; TRUE: if NOT equal zero, which means the MSB of i is 1 (i=4096) ; TODO?
   ret i1 %empty_77
 }
 
 ; Function Attrs: nounwind readnone
-define weak i1 @_ssdm_op_BitSelect.i1.i13.i32(i13, i32) #0 comdat {
+define weak i1 @_ssdm_op_BitSelect.i1.i13.i32(i13, i32) #0 comdat { ;intput arg: (i, 12)
 entry:
-  %empty = trunc i32 %1 to i13
-  %empty_78 = shl i13 1, %empty
-  %empty_79 = and i13 %0, %empty_78
-  %empty_80 = icmp ne i13 %empty_79, 0
+  %empty = trunc i32 %1 to i13 ; 12
+  %empty_78 = shl i13 1, %empty ; 1<<12 (1 0000 0000 0000) 1*2^12 4096
+  %empty_79 = and i13 %0, %empty_78 ; i "bitwise and" (1 0000 0000 0000)
+  %empty_80 = icmp ne i13 %empty_79, 0 ; TRUE: if NOT equal zero, which means the MSB of i is 1 (i=4096)
   ret i1 %empty_80
 }
 
@@ -427,7 +450,7 @@ define weak i8 @_ssdm_op_BitConcatenate.i8.i3.i5(i3, i5) #0 comdat {
 entry:
   %empty = zext i3 %0 to i8
   %empty_81 = zext i5 %1 to i8
-  %empty_82 = shl i8 %empty, 5
+  %empty_82 = shl i8 %empty, 5 ; left shift << 5; add 0 at the right hand side end
   %empty_83 = or i8 %empty_82, %empty_81
   ret i8 %empty_83
 }
@@ -437,7 +460,7 @@ define weak i5 @_ssdm_op_BitConcatenate.i5.i3.i2(i3, i2) #0 comdat {
 entry:
   %empty = zext i3 %0 to i5
   %empty_84 = zext i2 %1 to i5
-  %empty_85 = shl i5 %empty, 2
+  %empty_85 = shl i5 %empty, 2 ; left shift << 2; add 0 at the right hand side end
   %empty_86 = or i5 %empty_85, %empty_84
   ret i5 %empty_86
 }
@@ -447,7 +470,7 @@ define weak i256 @_ssdm_op_BitConcatenate.i256.i32.i32.i32.i32.i32.i32.i32.i32(i
 entry:
   %empty = zext i32 %6 to i64
   %empty_87 = zext i32 %7 to i64
-  %empty_88 = shl i64 %empty, 32
+  %empty_88 = shl i64 %empty, 32 ; left shift << 32; add 0 at the right hand side end
   %empty_89 = or i64 %empty_88, %empty_87
   %empty_90 = zext i32 %5 to i96
   %empty_91 = zext i64 %empty_89 to i96
